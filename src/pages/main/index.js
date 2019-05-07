@@ -3,20 +3,25 @@ import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import * as FavoritesActions from '../../store/actions/favorites';
+import { Creators as FavoritesActions } from '../../store/ducks/favorites';
+
 // import { Container } from './styles';
 
 class main extends Component {
   static propTypes = {
-    addFavorites: PropTypes.func.isRequired,
-    favorites: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.number.isRequired,
-        name: PropTypes.string.isRequired,
-        description: PropTypes.string.isRequired,
-        url: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
+    addFavoritesRequest: PropTypes.func.isRequired,
+    favorites: PropTypes.shape({
+      loading: PropTypes.bool,
+      data: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.number,
+          name: PropTypes.string,
+          description: PropTypes.string,
+          url: PropTypes.string,
+        }),
+      ),
+      error: PropTypes.oneOfType([null, PropTypes.string]),
+    }).isRequired,
   };
 
   state = {
@@ -26,7 +31,9 @@ class main extends Component {
   handleAddRepository = (event) => {
     event.preventDefault();
 
-    this.props.addFavorites();
+    this.props.addFavoritesRequest(this.state.repositoryInput);
+
+    this.setState({ repositoryInput: '' });
   };
 
   render() {
@@ -39,9 +46,15 @@ class main extends Component {
             onChange={e => this.setState({ repositoryInput: e.target.value })}
           />
           <button type="submit">Adicionar</button>
+
+          {this.props.favorites.loading && <span>Carregando...</span>}
+
+          {!!this.props.favorites.error && (
+            <span style={{ color: '#f00' }}>{this.props.favorites.error}</span>
+          )}
         </form>
         <ul>
-          {this.props.favorites.map(favorite => (
+          {this.props.favorites.data.map(favorite => (
             <li key={favorite.id}>
               <p>
                 <strong>{favorite.name}</strong> ({favorite.description})
